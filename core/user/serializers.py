@@ -2,12 +2,14 @@ from rest_framework import serializers
 
 from .models import MyUser
 
+
 class UserRegisterSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True)
     class Meta:
         model = MyUser
         fields = (
             'username',
-            'phone_number',
+            'email',
             'password'
         )
 
@@ -17,9 +19,9 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         user.save()
         return user
 
-    def validate_phone_number(self, value):
-        if MyUser.objects.filter(phone_number=value).exists():
-            raise serializers.ValidationError("Пользователь с таким номером телефона уже существует.")
+    def validate_email(self, value):
+        if MyUser.objects.filter(email=value).exists():
+            raise serializers.ValidationError("Пользователь с таким email уже существует.")
         return value
 
 
@@ -31,7 +33,6 @@ class UserProfilSerializer(serializers.ModelSerializer):
             'id',
             'username',
             'email',
-            'phone_number',
             'avatar',
             'age'
         )
@@ -43,7 +44,9 @@ class UserProfilUpdateSerializer(serializers.ModelSerializer):
         fields = (
             'username',
             'email',
-            'phone_number',
             'avatar',
             'age'
         )
+
+
+

@@ -2,25 +2,26 @@ from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 
 class MyUserManager(BaseUserManager):
-    def create_user(self, phone_number, username, password=None):
-        if not phone_number:
-            raise ValueError('Пользователи должны иметь номер телефона')
+    def create_user(self, email, username, password=None):
+        if not email:
+            raise ValueError('Пользователи должны иметь email')
 
         user = self.model(
-            phone_number=phone_number,
+            email=email,
             username=username,
         )
         user.set_password(password)
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, phone_number, username, password=None):
+    def create_superuser(self, email, username, password=None):
 
         user = self.create_user(
-            phone_number=phone_number,
+            email=email,
             username=username
         )
         user.is_admin = True
+        user.is_author = True
         user.set_password(password)
         user.save(using=self._db)
         return user
@@ -30,22 +31,17 @@ class MyUser(AbstractBaseUser):
         'Имя',
         max_length=123
     )
-    phone_number = models.CharField(
-        'Номер телефона',
-        max_length=17,
-        unique=True
-    )
     email = models.EmailField(
         'Электронная почта',
         unique=True,
-        blank=True,
-        null=True
     )
     age = models.PositiveSmallIntegerField(
         'Возраст',
         blank=True,
         null=True
     )
+    description = models.TextField()
+
     avatar = models.ImageField(
         upload_to='avatar_img/',
         blank=True,
@@ -70,12 +66,14 @@ class MyUser(AbstractBaseUser):
         default=1,
         verbose_name='Статус пользователя'
     )
+    is_author = models.BooleanField(default=False)
+
     is_admin = models.BooleanField(
         'Администратор',
         default=False
     )
 
-    USERNAME_FIELD = 'phone_number'
+    USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
 
     objects = MyUserManager()

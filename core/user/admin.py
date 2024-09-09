@@ -12,7 +12,7 @@ class UserCreationForm(forms.ModelForm):
 
     class Meta:
         model = MyUser
-        fields = ('phone_number', 'username')
+        fields = ('email', 'username')
 
     def clean_password2(self):
         password1 = self.cleaned_data.get('password1')
@@ -42,15 +42,16 @@ class UserAdmin(BaseUserAdmin):
     # The fields to be used in displaying the User model.
     # These override the definitions on the base UserAdmin
     # that reference specific fields on auth.User.
-    list_display = ('phone_number', 'username', 'avatar', 'age', 'created_date', 'status', 'is_admin')
+    list_display = ('email', 'username', 'avatar', 'age', 'created_date', 'status', 'is_admin', 'description', 'is_author')
     list_filter = ('is_admin', 'status', 'created_date')
     fieldsets = (
         (None, {'fields': (
             'password',
             'username',
-            'phone_number',
             'avatar',
             'age',
+            'is_author',
+            'description',
             'email',
             'status')}),
         ('Permissions', {'fields': ('is_admin', )}),
@@ -62,13 +63,13 @@ class UserAdmin(BaseUserAdmin):
             'classes': ('wide',),
             'fields': (
                 'username',
-                'phone_number',
+                'email',
                 'password1',
                 'password2'),
         }),
     )
-    search_fields = ('phone_number', 'username')
-    ordering = ('phone_number', )
+    search_fields = ('email', 'username')
+    ordering = ('email', )
     filter_horizontal = ()
 
 

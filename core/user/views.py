@@ -4,7 +4,11 @@ from rest_framework.views import Response, APIView
 from rest_framework import generics, permissions
 from rest_framework import status
 from .models import MyUser
-from .serializers import UserRegisterSerializer, UserProfilSerializer, UserProfilUpdateSerializer
+from .serializers import (
+    UserRegisterSerializer, UserProfilSerializer, UserProfilUpdateSerializer
+)
+
+
 
 class UserRegisterViews(generics.CreateAPIView):
     queryset = MyUser.objects.all()
@@ -39,3 +43,6 @@ class UserProfilViews(APIView):
 #     def post(self, request):
 #         request.session.flush()
 #         return Response(data='good', status=status.HTTP_200_OK)
+
+
+
