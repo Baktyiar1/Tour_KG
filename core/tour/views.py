@@ -8,6 +8,7 @@ from django.db import models
 from .service import get_client_ip
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
+from django.db.models.functions import Coalesce
 
 from .models import Tour, Region, Banner, TourAuthorRequest
 
@@ -36,15 +37,15 @@ class RegionListView(generics.ListAPIView):
 
     def get_queryset(self):
         region_id = self.kwargs.get('pk')
-        client_ip = get_client_ip(self.request)
 
         return Tour.objects.filter(
             is_active=True,
             regions__id=region_id
         ).annotate(
-            rating_user=Count('ratings', filter=Q(ratings__ip=client_ip))
+            rating_user=models.Count("ratings",
+                                     filter=models.Q(ratings__ip=get_client_ip(self.request)))
         ).annotate(
-            middle_star=Sum(F('ratings__star')) / Count('ratings')
+            middle_star=models.Sum(models.F('ratings__star')) / models.Count(models.F('ratings'))
         ).order_by('-middle_star')
 
 class TourIndexView(generics.ListAPIView):
@@ -53,14 +54,14 @@ class TourIndexView(generics.ListAPIView):
     filterset_class = TourFilter
     pagination_class = RegionPagination
     def get_queryset(self):
-        client_ip = get_client_ip(self.request)
 
         return Tour.objects.filter(
             is_active=True,
         ).annotate(
-            rating_user=Count('ratings', filter=Q(ratings__ip=client_ip))
+            rating_user=models.Count("ratings",
+                                     filter=models.Q(ratings__ip=get_client_ip(self.request)))
         ).annotate(
-            middle_star=Sum(F('ratings__star')) / Count('ratings')
+            middle_star=models.Sum(models.F('ratings__star')) / models.Count(models.F('ratings'))
         ).order_by('-middle_star')
 
 
@@ -153,6 +154,7 @@ class AuthorUserProfilViews(APIView):
 
 
 class AddStarRatingView(generics.CreateAPIView):
+    """Добавление рейтинга фильму"""
     serializer_class = CreateRetingSerializer
 
     def perform_create(self, serializer):

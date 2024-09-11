@@ -34,7 +34,7 @@ class AutorSerializer(serializers.ModelSerializer):
 
 class TourListSerializer(serializers.ModelSerializer):
     rating_user = serializers.BooleanField()
-    middle_star = serializers.FloatField()
+    middle_star = serializers.IntegerField()
     date_tour = Date_tourIndexSerializer(many=True)
     author = AutorSerializer()
     discount_price = serializers.SerializerMethodField()

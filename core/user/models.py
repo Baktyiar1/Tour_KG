@@ -45,12 +45,15 @@ class MyUser(AbstractBaseUser):
         null=True
     )
     description = models.TextField(
+        'о себе',
         blank=True,
         null=True
     )
     phone_number = models.CharField(
         'Номер телефона',
         max_length=17,
+        blank=True,
+        null=True
     )
 
     avatar = models.ImageField(
