@@ -31,6 +31,10 @@ class MyUser(AbstractBaseUser):
         'Имя',
         max_length=123
     )
+    last_name = models.CharField(
+        'Фамилия',
+        max_length=123
+    )
     email = models.EmailField(
         'Электронная почта',
         unique=True,
@@ -40,7 +44,14 @@ class MyUser(AbstractBaseUser):
         blank=True,
         null=True
     )
-    description = models.TextField()
+    description = models.TextField(
+        blank=True,
+        null=True
+    )
+    phone_number = models.CharField(
+        'Номер телефона',
+        max_length=17,
+    )
 
     avatar = models.ImageField(
         upload_to='avatar_img/',
@@ -79,7 +90,7 @@ class MyUser(AbstractBaseUser):
     objects = MyUserManager()
 
     def __str__(self):
-        return self.username
+        return f"{self.last_name} {self.username}"
 
     def has_perm(self, perm, obj=None):
         """Does the user have a specific permission?"""

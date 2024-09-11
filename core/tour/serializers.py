@@ -3,6 +3,7 @@ from django.utils import timezone
 
 from rest_framework import serializers
 
+from core import settings
 from .models import Tour, Region, Rating, Banner, Date_tour, User, Category, TourAuthorRequest, Booking
 
 
@@ -71,6 +72,7 @@ class CreateRetingSerializer(serializers.ModelSerializer):
             defaults={'star': validated_data.get('star')}
         )
         return rating
+
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
@@ -84,6 +86,8 @@ class RegionCreateSerializer(serializers.ModelSerializer):
             'image',
             'description'
         )
+
+
 
 class CreateTourSerializer(serializers.ModelSerializer):
     date_tour = Date_tourIndexSerializer(many=True)
@@ -120,17 +124,60 @@ class BookingSerializer(serializers.ModelSerializer):
             'total_price',
             'date_tour',
         )
+
+
+
+
+
+
+
+
+
+
+
+
+
+class UserAutherSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('username',)
+
 class TourAuthorRequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = TourAuthorRequest
         fields = (
+            'id',
             'description',
             'social_links'
         )
 
+class AuthorRequestListSerializer(serializers.ModelSerializer):
+    user = UserAutherSerializer()
+    class Meta:
+        model = TourAuthorRequest
+        fields = (
+            'id',
+            'user'
+        )
 
 
+class TourAuthorRequestStatusSerializer(serializers.ModelSerializer):
+    user = UserAutherSerializer()
+    class Meta:
+        model = TourAuthorRequest
+        fields = (
+            'is_approved',
+        )
 
+class AuthorRequestStatusListSerializer(serializers.ModelSerializer):
+    user = UserAutherSerializer()
+    class Meta:
+        model = TourAuthorRequest
+        fields = (
+            'id',
+            'user',
+            'is_approved'
+        )
 
  # на разработке
 class AuthorUserProfilSerializer(serializers.ModelSerializer):

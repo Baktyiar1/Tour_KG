@@ -1,12 +1,12 @@
 from django.db import models
 from django.contrib.auth import get_user_model
-from rest_framework.exceptions import ValidationError
+from django.core.exceptions import ValidationError
 
 User = get_user_model()
 
 
 class TourAuthorRequest(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     description = models.TextField()
     social_links = models.JSONField(default=dict, blank=True, null=True)
     is_approved = models.BooleanField(default=False)
@@ -19,6 +19,10 @@ class TourAuthorRequest(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.description[:20]}"
+
+    class Meta:
+        verbose_name = "Заявка автора"
+        verbose_name_plural = "Заявки авторов"
 
 
 class Banner(models.Model):
@@ -40,9 +44,16 @@ class Region(models.Model):
     description = models.TextField('Описание')
 
     image = models.ImageField(upload_to='region_img/')
+    parent = models.ForeignKey('self', on_delete=models.PROTECT, related_name='children', blank=True, null=True)
+
 
     def __str__(self):
-        return self.title
+        full_path = [self.title]
+        k = self.parent
+        while k is not None:
+            full_path.append(k.title)
+            k = k.parent
+        return ' -> '.join(full_path[::-1])
 
     class Meta:
         verbose_name = "Регион"

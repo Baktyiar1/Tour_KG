@@ -9,6 +9,7 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         model = MyUser
         fields = (
             'username',
+            'last_name',
             'email',
             'password'
         )
@@ -32,8 +33,10 @@ class UserProfilSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'username',
+            'last_name',
             'email',
             'avatar',
+            'phone_number',
             'age'
         )
 
@@ -43,9 +46,11 @@ class UserProfilUpdateSerializer(serializers.ModelSerializer):
         model = MyUser
         fields = (
             'username',
+            'last_name',
             'email',
             'avatar',
-            'age'
+            'age',
+            'phone_number'
         )
 
 

@@ -7,9 +7,15 @@ urlpatterns = [
     path('index/regions/<int:pk>/tours/', views.RegionListView.as_view()),
     path('index/tour_index/', views.TourIndexView.as_view()),
 
-    path('index/create/', views.CreateTourView.as_view()),
+    path('author_create/', views.CreateTourView.as_view()),
+
 
     path('request_author/', views.TourAuthorRequestCreateView.as_view()),
+    path('request_author_list/', views.AuthorTourRequesListView.as_view()),
+    path('author_status/<int:pk>/', views.TourAuthorRequestStatusView.as_view()),
+    path('author_status_list/', views.AuthorRequestStatusListView.as_view()),
+
+
     path('author_profile/', views.AuthorUserProfilViews.as_view()),
 
     path('rating/', views.AddStarRatingView.as_view()),
