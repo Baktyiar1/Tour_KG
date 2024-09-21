@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
+from django.db.models import Sum
+from django.utils import timezone
 
 User = get_user_model()
 
@@ -36,6 +38,17 @@ class Banner(models.Model):
         verbose_name = "Баннер"
         verbose_name_plural = "Баннеры"
 
+class Image(models.Model):
+    title = models.CharField(max_length=123, verbose_name='Название', blank=True, null=True)
+    description = models.TextField(blank=True, null=True)
+    image = models.ImageField(upload_to='image/', verbose_name='Изорожение')
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name = "Изображение"
+        verbose_name_plural = "Изображения"
 class Region(models.Model):
     title = models.CharField(
         'Название',
@@ -78,6 +91,7 @@ class Date_tour(models.Model):
         verbose_name = "Дата тура"
         verbose_name_plural = "Даты туров"
 
+
 class Tour(models.Model):
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tours')
     headline_img = models.ImageField(upload_to='headline_img/')
@@ -103,6 +117,7 @@ class Tour(models.Model):
     categories = models.ManyToManyField(Category, related_name='tours')
     regions = models.ManyToManyField(Region, related_name='tours')
     date_tour = models.ManyToManyField(Date_tour, related_name='tours')
+    images = models.ManyToManyField(Image, related_name='tours')
 
     is_active = models.BooleanField(
         'Активность',
@@ -120,33 +135,47 @@ class Tour(models.Model):
 
     def __str__(self):
         return self.title
+    def get_review(self):
+        return self.reviews_set.filter(parent__isnull=True)
 
     def clean(self):
         if self.discount_price and self.discount_price > self.price:
             raise ValidationError("Цена со скидкой не может быть больше первоначальной цены.")
+        if self.discount_price and (not self.discount_start_date or not self.discount_end_date):
+            raise ValidationError("Для скидки необходимо указать дату начала и окончания.")
+        if self.discount_start_date and self.discount_end_date and self.discount_start_date >= self.discount_end_date:
+            raise ValidationError("Дата начала скидки не может быть позднее даты окончания.")
+
+    def get_current_price(self):
+        """Возвращает актуальную цену с учётом скидки."""
+        now = timezone.now()
+        if self.discount_price and self.discount_start_date <= now <= self.discount_end_date:
+            return self.discount_price
+        return self.price
+
+    def get_total_booked_participants(self):
+        """Возвращает общее количество забронированных участников."""
+        return Booking.objects.filter(tour=self).aggregate(total_participants=Sum('participants'))['total_participants'] or 0
 
     class Meta:
         verbose_name = "Тур"
         verbose_name_plural = "Туры"
 
-class Image(models.Model):
-    title = models.CharField(max_length=123, verbose_name='Название')
-    image = models.ImageField(upload_to='image/', verbose_name='Изорожение')
-    tour = models.ForeignKey(Tour, on_delete=models.CASCADE, related_name='images')  # Связь с туром
-
-    def __str__(self):
-        return self.title
-
-    class Meta:
-        verbose_name = "Изображение"
-        verbose_name_plural = "Изображения"
-
 class Booking(models.Model):
     client = models.ForeignKey(User, on_delete=models.CASCADE, related_name='client_booking')
     tour = models.ForeignKey(Tour, on_delete=models.CASCADE, related_name='tour_booking')
+    comments = models.TextField()
     date_tour = models.ForeignKey(Date_tour, on_delete=models.PROTECT)
     participants = models.PositiveSmallIntegerField(default=1)
     total_price = models.DecimalField(max_digits=15, decimal_places=2, editable=False)
+    language = models.PositiveSmallIntegerField(
+        choices=(
+            (1, 'English'),
+            (2, 'Русский'),
+            (3, 'Кыргыз')
+        ),
+        default=2
+    )
     status = models.PositiveSmallIntegerField(
         choices=(
             (1, 'Ожидает подтверждения'),
@@ -157,24 +186,32 @@ class Booking(models.Model):
     )
     created_date = models.DateTimeField(auto_now_add=True)
 
+    def clean(self):
+        # Валидация количества участников
+        if self.participants < 1:
+            raise ValidationError("Количество участников должно быть хотя бы 1.")
+        if self.participants > self.tour.max_participants:
+            raise ValidationError(f"Максимальное количество участников для этого тура: {self.tour.max_participants}.")
+
     def __str__(self):
         return f"Бронирование по {self.client.username} для {self.tour.title}"
 
     class Meta:
         verbose_name = "Бронирование"
         verbose_name_plural = "Бронирования"
+        unique_together = ('client', 'tour', 'date_tour')
+
+class Payment_method(models.Model):
+    payment_name = models.CharField(max_length=50, verbose_name='Название')
+
+    def __str__(self):
+        return self.payment_name
 
 class Payment(models.Model):
     booking = models.OneToOneField(Booking, on_delete=models.CASCADE, related_name='payment')
-    amount = models.DecimalField(max_digits=10, decimal_places=2)
-    payment_method = models.CharField(
-        max_length=20,
-        choices=[
-            ('CLOUDPAYMENTS', 'CloudPayments'),
-            ('PAYPAL', 'PayPal'),
-            ('BANKCARD', 'Bank Card')
-        ]
-    )
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    payment_method = models.ForeignKey(Payment_method, on_delete=models.PROTECT)
+
     status = models.PositiveSmallIntegerField(
         choices=[
             (1, 'Платеж ожидает обработки'),
@@ -183,7 +220,6 @@ class Payment(models.Model):
         ],
         default=1
     )
-    transaction_id = models.CharField(max_length=255, blank=True, null=True)
     processed_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -192,6 +228,8 @@ class Payment(models.Model):
     class Meta:
         verbose_name = "Платеж"
         verbose_name_plural = "Платежи"
+
+
 
 class RatingStar(models.Model):
     """Звезда рейтинга"""

@@ -5,14 +5,18 @@ from rest_framework import generics, permissions
 from rest_framework import status
 from .models import MyUser
 from .serializers import (
-    UserRegisterSerializer, UserProfilSerializer, UserProfilUpdateSerializer
+    CustomRegisterSerializer, UserProfilSerializer, UserProfilUpdateSerializer
 )
 
 
 
 class UserRegisterViews(generics.CreateAPIView):
     queryset = MyUser.objects.all()
-    serializer_class = UserRegisterSerializer
+    serializer_class = CustomRegisterSerializer
+
+    def perform_create(self, serializer):
+        # Передаем request в сериализатор
+        serializer.save(request=self.request)
 
 
 class UserProfilViews(APIView):

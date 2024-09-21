@@ -39,11 +39,19 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    'django.contrib.sites',
     'rest_framework',
+    'rest_framework.authtoken',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'dj_rest_auth.registration',
+
     'drf_yasg',
 
     'tour',
     'user',
+    'qrcode',
 
     'django_filters',
 ]
@@ -58,7 +66,11 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'allauth.account.middleware.AccountMiddleware',
 ]
+
+# django.contrib.sites
+SITE_ID = 1
 
 ROOT_URLCONF = 'core.urls'
 
@@ -139,6 +151,29 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# django-allauth
+ACCOUNT_AUTHENTICATION_METHOD = "email"
+ACCOUNT_USERNAME_REQUIRED = True  # Требовать имя пользователя
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_EMAIL_VERIFICATION = "none"  # Обязательное подтверждение email
+ACCOUNT_CONFIRM_EMAIL_ON_GET = True  # Подтверждение через GET запрос (ссылка на email)
+
+LOGIN_URL = "/admin"
+# Django SMTP
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")  # Ваш email
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")  # Пароль от приложения
+
+REST_AUTH = {
+    'USE_JWT': True,  # Включить использование JWT
+    'JWT_AUTH_COOKIE': 'auth_token',  # Имя Cookie для хранения Access Token
+    'JWT_AUTH_REFRESH_COOKIE': 'refresh_token',  # Имя Cookie для хранения Refresh Token
+    'JWT_AUTH_HTTPONLY': True,  # Cookie только для чтения на стороне сервера
+    "REGISTER_SERIALIZER": "user.serializers.CustomRegisterSerializer",
+}
 
 # Настройка срока действия Access Token и Refresh Token
 SIMPLE_JWT = {
@@ -157,6 +192,7 @@ SIMPLE_JWT = {
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'dj_rest_auth.jwt_auth.JWTCookieAuthentication',  # Использование Cookie для хранения JWT
     ],
 
     'DEFAULT_FILTER_BACKENDS': (
@@ -166,5 +202,7 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
     'PAGE_SIZE': 100
 }
+
+
 
 

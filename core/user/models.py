@@ -1,10 +1,37 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 
+# class MyUserManager(BaseUserManager):
+#     def create_user(self, email, username, password=None):
+#         if not email:
+#             raise ValueError('Пользователи должны иметь email')
+#
+#         user = self.model(
+#             email=email,
+#             username=username,
+#         )
+#         user.set_password(password)
+#         user.save(using=self._db)
+#         return user
+#
+#     def create_superuser(self, email, username, password=None):
+#
+#         user = self.create_user(
+#             email=email,
+#             username=username
+#         )
+#         user.is_admin = True
+#         user.is_author = True
+#         user.set_password(password)
+#         user.save(using=self._db)
+#         return user
+
 class MyUserManager(BaseUserManager):
     def create_user(self, email, username, password=None):
         if not email:
             raise ValueError('Пользователи должны иметь email')
+        if not username:
+            raise ValueError('Пользователи должны иметь имя')
 
         user = self.model(
             email=email,
@@ -15,14 +42,12 @@ class MyUserManager(BaseUserManager):
         return user
 
     def create_superuser(self, email, username, password=None):
-
         user = self.create_user(
             email=email,
-            username=username
+            username=username,
+            password=password
         )
         user.is_admin = True
-        user.is_author = True
-        user.set_password(password)
         user.save(using=self._db)
         return user
 
@@ -39,6 +64,8 @@ class MyUser(AbstractBaseUser):
         'Электронная почта',
         unique=True,
     )
+    password = models.CharField(max_length=128)
+
     age = models.PositiveSmallIntegerField(
         'Возраст',
         blank=True,
@@ -52,12 +79,21 @@ class MyUser(AbstractBaseUser):
     phone_number = models.CharField(
         'Номер телефона',
         max_length=17,
-        blank=True,
-        null=True
+
     )
 
     avatar = models.ImageField(
         upload_to='avatar_img/',
+        blank=True,
+        null=True
+    )
+    address = models.CharField(
+        max_length=300,
+        verbose_name='Адрес'
+    )
+    qr_code_img = models.ImageField(
+        upload_to='tour_qr_codes/',
+        verbose_name='QR code для оплаты',
         blank=True,
         null=True
     )
