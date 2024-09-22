@@ -40,7 +40,7 @@ class Banner(models.Model):
 
 class Image(models.Model):
     title = models.CharField(max_length=123, verbose_name='Название', blank=True, null=True)
-    description = models.TextField(blank=True, null=True)
+    description = models.TextField(blank=True, null=True, verbose_name='Описание')
     image = models.ImageField(upload_to='image/', verbose_name='Изорожение')
 
     def __str__(self):

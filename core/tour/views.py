@@ -17,7 +17,7 @@ from .serializers import (
     TourAuthorRequestSerializer, AuthorUserProfilSerializer, TourAuthorRequestStatusSerializer,
     AuthorRequestListSerializer,
     AuthorRequestStatusListSerializer, WishlistSerializer, TourDetailSerializer, ReviewsCreateSerializer,
-    BookingSerializer, PaymentSerializer,
+    BookingSerializer, PaymentSerializer, TourDetailCreateSerializer
 
 )
 
@@ -188,7 +188,11 @@ class AddStarRatingView(generics.CreateAPIView):
 
 # детальная страница
 class TourDetailView(generics.RetrieveUpdateDestroyAPIView):
-    serializer_class = TourDetailSerializer
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return TourDetailSerializer
+        elif self.request.method in ['PUT', 'PATCH']:
+            return TourDetailCreateSerializer
 
     def get_queryset(self):
         return Tour.objects.filter(

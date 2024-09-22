@@ -124,16 +124,18 @@ class DateTourSerializer(serializers.ModelSerializer):
 # бронирования
 
 class BookingTourSerializer(serializers.ModelSerializer):
+    author = AutorSerializer(read_only=True)
     class Meta:
         model = Tour
         fields = (
             'title',
             'price',
             'discount_price',
-            'headline_img'
+            'headline_img',
+            'author'
         )
 
-        read_only_fields = ('title', 'price', 'discount_price', 'headline_img')
+        read_only_fields = ('title', 'price', 'discount_price', 'headline_img', 'author')
 
 class ClientSerializer(serializers.ModelSerializer):
     class Meta:
@@ -150,7 +152,6 @@ class ClientSerializer(serializers.ModelSerializer):
 class BookingSerializer(serializers.ModelSerializer):
     client = ClientSerializer(read_only=True)  # Теперь клиент редактируемый
     tour = BookingTourSerializer(read_only=True)
-    author = AutorSerializer(read_only=True)
     tour_id = serializers.PrimaryKeyRelatedField(queryset=Tour.objects.all(), source='tour', write_only=True)
     participants = serializers.IntegerField(default=1)
 
@@ -158,7 +159,6 @@ class BookingSerializer(serializers.ModelSerializer):
         model = Booking
         fields = (
             'id',
-            'author',
             'client',
             'tour',
             'tour_id',  # Это поле будет использоваться для передачи ID тура
@@ -170,7 +170,7 @@ class BookingSerializer(serializers.ModelSerializer):
             'status',
             'created_date'
         )
-        read_only_fields = ('status', 'total_price', 'created_date', 'client', 'author')
+        read_only_fields = ('status', 'total_price', 'created_date', 'client')
 
     def validate(self, data):
         request = self.context.get('request')
@@ -227,8 +227,10 @@ class Payment_methodSerializer(serializers.ModelSerializer):
         model = Payment_method
         fields = '__all__'
 
+
 class PaymentSerializer(serializers.ModelSerializer):
-    author = AutorPaymentSerializer(read_only=True)
+    author = AutorPaymentSerializer(read_only=True)  # Автор будет отображаться через этот сериализатор
+
     class Meta:
         model = Payment
         fields = (
@@ -237,21 +239,26 @@ class PaymentSerializer(serializers.ModelSerializer):
             'amount',
             'payment_method'
         )
-        read_only_fields = ('amount',)
+        read_only_fields = ('amount', 'author')  # 'author' теперь тоже поле для чтения
 
     def create(self, validated_data):
         booking = validated_data['booking']
         amount = booking.total_price
 
+        # Получаем автора тура через бронирование
+        author = booking.tour.author
+
         payment = Payment.objects.create(
-            booking = booking,
-            amount = amount,
-            payment_method = validated_data['payment_method']
+            booking=booking,
+            amount=amount,
+            payment_method=validated_data['payment_method']
         )
 
+        # Привязываем автора к платежу
+        payment.author = author
+        payment.save()
+
         return payment
-
-
 
 
 # заявка на авторство
@@ -427,3 +434,24 @@ class TourDetailSerializer(serializers.ModelSerializer):
             if obj.discount_start_date <= now <= obj.discount_end_date:
                 return obj.discount_price
         return None
+
+class TourDetailCreateSerializer(serializers.ModelSerializer):
+    regions = RegionDetailSerializer(many=True)
+    images = ImageDetailSerializer(many=True)
+    class Meta:
+        model = Tour
+        fields = (
+            'headline_img',
+            'title',
+            'description',
+            'duration',
+            'price',
+            'discount_price',
+            'discount_start_date',
+            'discount_end_date',
+            'participants_price',
+            'max_participants',
+            'regions',
+            'date_tour',
+            'images',
+        )
