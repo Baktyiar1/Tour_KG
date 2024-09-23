@@ -3,9 +3,11 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework.views import Response, APIView
 from rest_framework import generics, permissions
 from rest_framework import status
+from tour.permissions import IsAdminOrAuthor
 from .models import MyUser
 from .serializers import (
-    CustomRegisterSerializer, UserProfilSerializer, UserProfilUpdateSerializer
+    CustomRegisterSerializer, UserProfilSerializer, UserProfilUpdateSerializer, UserBookingSerializer,
+    AuthorUserProfilSerializer, QrCodeSerializer
 )
 
 
@@ -49,4 +51,26 @@ class UserProfilViews(APIView):
 #         return Response(data='good', status=status.HTTP_200_OK)
 
 
+class UserBookingView(generics.ListAPIView):
+    serializer_class = UserBookingSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
+    def get_queryset(self):
+        return MyUser.objects.filter(id=self.request.user.id)  # Возвращаем текущего пользователя
+
+
+class AuthorToursView(generics.ListAPIView):
+    serializer_class = AuthorUserProfilSerializer
+
+    def get_queryset(self):
+        return MyUser.objects.filter(id=self.request.user.id)
+
+class QrCodeView(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = [IsAdminOrAuthor]
+    serializer_class = QrCodeSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_admin:
+            return MyUser.objects.all()
+        return MyUser.objects.filter(id=user.id)

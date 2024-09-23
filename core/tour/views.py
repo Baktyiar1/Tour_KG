@@ -14,7 +14,7 @@ from django_filters import rest_framework as filters
 
 from .serializers import (
     RegionIndexSerializer, BannerIndexSerializer, TourListSerializer, CreateRetingSerializer, CreateTourSerializer,
-    TourAuthorRequestSerializer, AuthorUserProfilSerializer, TourAuthorRequestStatusSerializer,
+    TourAuthorRequestSerializer, TourAuthorRequestStatusSerializer,
     AuthorRequestListSerializer,
     AuthorRequestStatusListSerializer, WishlistSerializer, TourDetailSerializer, ReviewsCreateSerializer,
     BookingSerializer, PaymentSerializer, TourDetailCreateSerializer
@@ -128,19 +128,6 @@ class AuthorRequestStatusListView(generics.ListAPIView):
 
     def get_queryset(self):
         return TourAuthorRequest.objects.filter(is_approved=True)
-
-
- # на разработке
-class AuthorUserProfilViews(APIView):
-    # permission_classes = [permissions.IsAuthenticated]
-
-    # @swagger_auto_schema(responses={200: AuthorUserProfilSerializer()})
-    def get(self, request):
-        user = get_object_or_404(User, id=request.user.id)
-        if user.is_author:  # Проверяем, является ли пользователь автором
-            serializer = AuthorUserProfilSerializer(user)
-
-        return Response(serializer.data)
 
 
 

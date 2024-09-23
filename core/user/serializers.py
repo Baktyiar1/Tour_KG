@@ -1,7 +1,11 @@
 from rest_framework import serializers
+from django.utils import timezone
+from tour.service import get_client_ip
+from django.db import models
+from django.db.models import Avg
 from dj_rest_auth.registration.serializers import RegisterSerializer
 from .models import MyUser
-
+from tour.models import Tour, Booking, Date_tour, Payment, Reviews, Payment_method
 
 # class UserRegisterSerializer(serializers.ModelSerializer):
 #     password = serializers.CharField(write_only=True)
@@ -68,6 +72,76 @@ class UserProfilUpdateSerializer(serializers.ModelSerializer):
             'phone_number',
             'address'
         )
+class TourProfilSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Tour
+        fields = (
+            'title',
+            'description',
+            'headline_img'
+        )
+class ProfilBookingSerializer(serializers.ModelSerializer):
+    tour = TourProfilSerializer(read_only=True)
+    class Meta:
+        model = Booking
+        fields = (
+            'tour',
+            'total_price'
+        )
+
+class UserBookingSerializer(serializers.ModelSerializer):
+    bookings = ProfilBookingSerializer(source='client_booking', many=True, read_only=True)
+
+    class Meta:
+        model = MyUser
+        fields = (
+            'bookings',  # Бронирования пользователя
+        )
+
+class Date_tourIndexSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Date_tour
+        fields = '__all__'
+
+class TourListSerializer(serializers.ModelSerializer):
+    date_tour = Date_tourIndexSerializer(many=True)
+    discount_price = serializers.SerializerMethodField()
+    class Meta:
+        model = Tour
+        fields = (
+            'id',
+            'headline_img',
+            'title',
+            'description',
+            'participants_price',
+            'price',
+            'discount_price',
+            'date_tour',
+        )
 
 
+    def get_discount_price(self, obj):
+        now = timezone.now()
+        if obj.discount_start_date and obj.discount_end_date:
+            if obj.discount_start_date <= now <= obj.discount_end_date:
+                return obj.discount_price
+        return None
 
+class AuthorUserProfilSerializer(serializers.ModelSerializer):
+    tours = TourListSerializer(many=True, read_only=True)
+    class Meta:
+        model = MyUser
+        fields = (
+            'username',
+            'last_name',
+            'avatar',
+            'description',
+            'tours',
+        )
+
+class QrCodeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MyUser
+        fields = (
+            'qr_code_img',
+        )

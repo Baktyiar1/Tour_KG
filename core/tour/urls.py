@@ -16,7 +16,7 @@ urlpatterns = [
     path('author_status_list/', views.AuthorRequestStatusListView.as_view()),
 
 
-    path('author_profile/', views.AuthorUserProfilViews.as_view()),
+    # path('author_profile/', views.AuthorUserProfilViews.as_view()),
 
     path('rating/', views.AddStarRatingView.as_view()),
 

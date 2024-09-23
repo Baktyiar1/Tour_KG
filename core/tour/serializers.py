@@ -307,16 +307,6 @@ class AuthorRequestStatusListSerializer(serializers.ModelSerializer):
 
 
 
-
- # на разработке
-class AuthorUserProfilSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = User
-        fields = ('id', 'username', 'email', 'avatar', 'age',)
-
-
-
 # список желаний
 class TourWishlistSerializer(serializers.ModelSerializer):
 
