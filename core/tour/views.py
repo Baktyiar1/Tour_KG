@@ -141,6 +141,9 @@ class WishlistView(generics.ListAPIView):
     def get_queryset(self):
         return Wishlist.objects.filter(user=self.request.user)
 
+class RemoveWishlistView(generics.DestroyAPIView):
+    queryset = Wishlist.objects.all()
+    serializer_class = WishlistSerializer
 
 
 
@@ -154,6 +157,8 @@ class CreateBookingView(generics.CreateAPIView):
         context = super().get_serializer_context()
         context['request'] = self.request
         return context
+
+
 
 # оплата
 class PaymentView(generics.CreateAPIView):

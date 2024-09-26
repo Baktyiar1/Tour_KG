@@ -98,13 +98,13 @@ class UserBookingSerializer(serializers.ModelSerializer):
             'bookings',  # Бронирования пользователя
         )
 
-class Date_tourIndexSerializer(serializers.ModelSerializer):
+class DatetourIndexSerializer(serializers.ModelSerializer):
     class Meta:
         model = Date_tour
         fields = '__all__'
 
-class TourListSerializer(serializers.ModelSerializer):
-    date_tour = Date_tourIndexSerializer(many=True)
+class TourAuthorSerializer(serializers.ModelSerializer):
+    date_tour = DatetourIndexSerializer(many=True)
     discount_price = serializers.SerializerMethodField()
     class Meta:
         model = Tour
@@ -128,7 +128,7 @@ class TourListSerializer(serializers.ModelSerializer):
         return None
 
 class AuthorUserProfilSerializer(serializers.ModelSerializer):
-    tours = TourListSerializer(many=True, read_only=True)
+    tours = TourAuthorSerializer(many=True, read_only=True)
     class Meta:
         model = MyUser
         fields = (
@@ -145,3 +145,51 @@ class QrCodeSerializer(serializers.ModelSerializer):
         fields = (
             'qr_code_img',
         )
+
+
+
+class ClientBookingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MyUser
+        fields = (
+            'username',
+            'last_name',
+            'email',
+            'phone_number',
+        )
+
+
+class AuthorToursSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Tour
+        fields = (
+            'title',
+            'description',
+            'headline_img'
+        )
+
+class AuthorBookingSerializer(serializers.ModelSerializer):
+    client = ClientBookingSerializer(read_only=True)
+    tour = AuthorToursSerializer(read_only=True)
+
+    class Meta:
+        model = Booking
+        fields = (
+            'id',
+            'client',
+            'tour',
+            'total_price',
+            'status'
+        )
+
+
+class AuthorBookingListSerializer(serializers.ModelSerializer):
+    bookings = AuthorBookingSerializer(source='client_booking', many=True, read_only=True)
+
+    class Meta:
+        model = MyUser
+        fields = (
+            'id',
+            'bookings',  # Бронирования пользователя
+        )
+

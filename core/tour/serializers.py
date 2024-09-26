@@ -315,6 +315,9 @@ class TourWishlistSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'headline_img',
+            'description',
+            'price',
+            'discount_price',
             'title',
         )
 
@@ -387,6 +390,8 @@ class RegionDetailSerializer(serializers.ModelSerializer):
         fields = ('id', 'title')
 
 class TourDetailSerializer(serializers.ModelSerializer):
+    total_count = serializers.SerializerMethodField()
+
     rating_user = serializers.BooleanField()
     middle_star = serializers.FloatField()
     date_tour = Date_tourIndexSerializer(many=True)
@@ -415,7 +420,8 @@ class TourDetailSerializer(serializers.ModelSerializer):
             'middle_star',
             'date_tour',
             'images',
-            'reviews'
+            'reviews',
+            'total_count'
         )
 
     def get_discount_price(self, obj):
@@ -425,7 +431,11 @@ class TourDetailSerializer(serializers.ModelSerializer):
                 return obj.discount_price
         return None
 
+    def get_total_count(self, obj):
+        return obj.reviews.count()
+
 class TourDetailCreateSerializer(serializers.ModelSerializer):
+
     regions = RegionDetailSerializer(many=True)
     images = ImageDetailSerializer(many=True)
     class Meta:
@@ -445,3 +455,5 @@ class TourDetailCreateSerializer(serializers.ModelSerializer):
             'date_tour',
             'images',
         )
+
+

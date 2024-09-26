@@ -8,7 +8,10 @@ urlpatterns = [
     path('login/', TokenObtainPairView.as_view()),
     path('profile/', views.UserProfilViews.as_view()),
     path('profile_booking/', views.UserBookingView.as_view()),
+
     path('profile_author/', views.AuthorToursView.as_view()),
     path('qrcode/<int:pk>/', views.QrCodeView.as_view()),
+    path('booking_list/', views.AuthorBookingListView.as_view()),
+    path('booking_status/<int:pk>/', views.ConfirmBookingView.as_view()),
     # path('logout/', views.UserLogoutView.as_view())
 ]

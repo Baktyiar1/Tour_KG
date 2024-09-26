@@ -1,13 +1,16 @@
 from django.shortcuts import get_object_or_404
 from drf_yasg.utils import swagger_auto_schema
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.views import Response, APIView
 from rest_framework import generics, permissions
 from rest_framework import status
+
+from tour.models import Booking, Tour
 from tour.permissions import IsAdminOrAuthor
 from .models import MyUser
 from .serializers import (
     CustomRegisterSerializer, UserProfilSerializer, UserProfilUpdateSerializer, UserBookingSerializer,
-    AuthorUserProfilSerializer, QrCodeSerializer
+    AuthorUserProfilSerializer, QrCodeSerializer, AuthorBookingListSerializer, AuthorBookingSerializer
 )
 
 
@@ -74,3 +77,26 @@ class QrCodeView(generics.RetrieveUpdateDestroyAPIView):
         if user.is_admin:
             return MyUser.objects.all()
         return MyUser.objects.filter(id=user.id)
+
+
+class AuthorBookingListView(generics.ListAPIView):
+    serializer_class = AuthorBookingListSerializer
+    permission_classes = [IsAdminOrAuthor]
+
+    def get_queryset(self):
+        return MyUser.objects.filter(id=self.request.user.id)
+
+class ConfirmBookingView(generics.UpdateAPIView):
+    serializer_class = AuthorBookingSerializer
+    permission_classes = [IsAdminOrAuthor]
+
+    def get_queryset(self):
+        user = self.request.user
+        return Booking.objects.filter(tour__author=user).select_related('tour', 'client')
+
+    def perform_update(self, serializer):
+        booking = serializer.save(status=2)
+
+        user = booking.client
+
+        return user

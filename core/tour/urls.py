@@ -22,9 +22,11 @@ urlpatterns = [
 
     # избранный
     path('wishlist/', views.WishlistView.as_view()),
+    path('wishlist/<int:pk>/', views.RemoveWishlistView.as_view()),
 
     # бронирования
     path('booking/', views.CreateBookingView.as_view()),
+
 
     # оплата
     path('payment/', views.PaymentView.as_view()),
