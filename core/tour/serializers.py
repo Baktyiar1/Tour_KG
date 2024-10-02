@@ -7,7 +7,9 @@ from .models import (
     Payment, Image, Reviews, Payment_method
 )
 
-
+from django.db.models import Avg, Count
+from collections import defaultdict
+from rest_framework.exceptions import ValidationError
 
 class BannerIndexSerializer(serializers.ModelSerializer):
     class Meta:
@@ -62,19 +64,18 @@ class TourListSerializer(serializers.ModelSerializer):
             if obj.discount_start_date <= now <= obj.discount_end_date:
                 return obj.discount_price
         return None
+
+
+
 class CreateRetingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Rating
-        fields = ('star', 'tour')
+        fields = ('star', 'tour')  # Убедитесь, что 'ip' здесь нет
 
     def create(self, validated_data):
         ip = get_client_ip(self.context['request'])  # Получаем IP пользователя
-        rating, created = Rating.objects.update_or_create(
-            ip=ip,
-            tour=validated_data.get('tour'),
-            defaults={'star': validated_data.get('star')}
-        )
-        return rating
+        # Создаем новый объект Rating с уникальным IP
+        return Rating.objects.create(ip=ip, **validated_data)
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -391,6 +392,7 @@ class RegionDetailSerializer(serializers.ModelSerializer):
 
 class TourDetailSerializer(serializers.ModelSerializer):
     total_count = serializers.SerializerMethodField()
+    total_star = serializers.SerializerMethodField()
 
     rating_user = serializers.BooleanField()
     middle_star = serializers.FloatField()
@@ -421,7 +423,8 @@ class TourDetailSerializer(serializers.ModelSerializer):
             'date_tour',
             'images',
             'reviews',
-            'total_count'
+            'total_count',
+            'total_star'
         )
 
     def get_discount_price(self, obj):
@@ -433,6 +436,19 @@ class TourDetailSerializer(serializers.ModelSerializer):
 
     def get_total_count(self, obj):
         return obj.reviews.count()
+
+    def get_total_star(self, obj):
+        result = defaultdict(int)
+
+        star_counts = obj.ratings.values('star__value').annotate(count=Count('star'))
+
+        for star in star_counts:
+            result[star['star__value']] += star['count']
+
+        return [
+            {'star': star, 'count': result[star]} for star in range(5, 0, -1)
+        ]
+
 
 class TourDetailCreateSerializer(serializers.ModelSerializer):
 

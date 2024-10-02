@@ -8,7 +8,7 @@ from .service import get_client_ip
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from django.db.models import Avg
-from .models import Tour, Region, Banner, TourAuthorRequest, Wishlist, Booking, Date_tour, Payment, Reviews
+from .models import Tour, Region, Banner, TourAuthorRequest, Wishlist, Booking, Date_tour, Payment, Reviews, Rating
 from rest_framework.filters import OrderingFilter, SearchFilter
 from django_filters import rest_framework as filters
 
@@ -36,6 +36,7 @@ class RegionIndexView(generics.ListAPIView):
 
 class RegionListView(generics.ListAPIView):
     serializer_class = TourListSerializer
+    pagination_class = RegionPagination
 
     def get_queryset(self):
         region_id = self.kwargs.get('pk')
@@ -171,11 +172,13 @@ class PaymentView(generics.CreateAPIView):
 
 
 class AddStarRatingView(generics.CreateAPIView):
-    """Добавление рейтинга """
+    """Добавление рейтинга"""
     serializer_class = CreateRetingSerializer
+    queryset = Rating.objects.all()
 
     def perform_create(self, serializer):
-        serializer.save(ip=get_client_ip(self.request))
+        # Не нужно добавлять ip здесь, так как он уже передается в методе create
+        serializer.save()
 
 
 # детальная страница
