@@ -136,9 +136,9 @@ WSGI_APPLICATION = 'core.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'my_tour',
-        'USER': 'my_user',
-        'PASSWORD': 'password',  # пароль, который вы указали при создании пользователя
+        'NAME': 'tourkg',
+        'USER': 'usertour',
+        'PASSWORD': 'password',
         'HOST': 'localhost',
         'PORT': '5432',
     }
